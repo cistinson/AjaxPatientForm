@@ -1,0 +1,179 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Ajax Test</title>
+    <style>    
+      body{
+        text-align: center;
+        background-image: linear-gradient(to left, #43e97b 0%, #38f9d7 100%);
+      }
+      
+      #response{
+        width: 30%;
+        text-align: left;
+        margin: auto;
+      }
+      
+      #read-list{
+        font-size: 1rem;
+        border: 2px solid black;
+        padding: 0.5rem;
+      }
+      
+      h2{
+        margin: 0.5rem;
+      }
+      
+      button{
+        margin: 1rem 0.5rem;
+      }
+      
+      .hidden{
+        display: none;
+      }      
+      .active{
+        display: inline;        
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Ajax Patient List</h1>
+    
+    <div id="createPatient">
+      <h2>Create Patient</h2>
+      <form>
+        <label>Name:
+          <input type="text" id="create-name" />
+        </label>
+        <label>Age:
+          <input type="number" id="create-age" />
+        </label>
+        <button type="button" id="create-submit">Add</button>
+      </form>
+      
+      <h2>Delete Patient</h2>
+      <form>
+        <label>ID:
+          <input type="text" id="delete-id" />
+        </label>
+        <button type="button" id="delete-submit">Delete</button>
+      </form>
+      
+      <button type="button" id="read-list">See Current List</button>
+    </div>
+    
+    <hr>
+    
+    <div id="patientList" class="hidden">
+      <h2>Patient List</h2>
+      <button id="addPatientView">Add or Delete Patient</button>
+      <pre id="response"></pre>
+    </div>
+    
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js"  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="  crossorigin="anonymous"></script>
+    <script type="text/javascript">
+
+
+      var BASE_URL = 'https://pacific-meadow-64112.herokuapp.com/data-api/';
+      var collection = 'cstinson';
+
+      $('#create-submit').on( 'click', handleCreateForm );
+      $('#delete-submit').on( 'click', handleDeleteForm );
+      $('#read-list').on('click', handleReadList);
+      $('#addPatientView').on('click', createView);
+
+      function reportResponse( response ) {
+          $('#response').text( JSON.stringify( response, null, 4 ) );
+      }
+
+      function reportAjaxError( jqXHR, textStatus, errorThrown ) {
+          var msg = 'AJAX error.\n' +
+              'Status Code: ' + jqXHR.status + '\n' +
+              'Status: ' + textStatus;
+          if ( errorThrown ) {
+              msg += '\n' + 'Error thrown: ' + errorThrown;
+          }
+          if ( jqXHR.responseText ) {
+              msg += '\n' + 'Response text: ' + jqXHR.responseText;
+          }
+          $('#response').text( msg );
+      }
+
+      function clearReport( ) {
+          $('#response').empty( );
+      }
+
+      function handleCreateForm( evt ) {
+          evt.preventDefault( );
+          var name = $('#create-name').val();
+          var age = $('#create-age').val();
+          var person = {
+              name: name,
+              age: age
+          };
+          createPerson( person );
+          handleReadList( evt );
+          listView();
+          $("#create-name").val('');
+          $("#create-age").val('');
+      }
+
+      function createPerson( person ) {
+          clearReport( );
+          $.ajax( BASE_URL + collection,
+          {
+              method: 'POST',
+              data: person,
+              success: reportResponse,
+              error: reportAjaxError
+          } );
+      }
+
+      function handleReadList( evt ) {
+          evt.preventDefault( );
+          getListOfPeople( );
+          listView();
+      }
+
+      function getListOfPeople( ) {
+          clearReport( );
+          $.ajax( BASE_URL + collection,
+          {
+              method: 'GET',
+              success: reportResponse,
+              error: reportAjaxError
+          } );
+      }
+  
+      function handleDeleteForm( evt ) {
+          evt.preventDefault( );
+          var id = $('#delete-id').val();
+          deletePerson( id );
+      }
+
+      function deletePerson( id ) {
+          clearReport( );
+          $.ajax( BASE_URL + collection + '/' + id,
+          {
+              method: 'DELETE',
+              success: reportResponse,
+              error: reportAjaxError
+          } );
+          $("#delete-id").val('');
+          listView();
+      }
+
+      function createView(){
+        $('#patientList').addClass("hidden").removeClass("active");
+        $('#createPatient').addClass("active").removeClass("hidden");
+      }
+      
+      function listView(){
+        $('#patientList').addClass("active").removeClass("hidden");
+        $('#createPatient').addClass("hidden").removeClass("active");
+      }
+      
+    </script>
+  </body>
+</html>
